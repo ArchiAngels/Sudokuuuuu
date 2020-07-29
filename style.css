@@ -1,0 +1,60 @@
+body{
+    width:100%;
+    min-height: 100vh;
+    background-color: black;
+    margin: 0;
+    padding: 0;
+}
+main{
+    width:100%;
+    min-height:inherit;
+    display:flex;
+    justify-content: center;
+}
+.wrap_content{
+    max-width:1600px;
+    width:80%;
+    min-height:inherit;
+    border:1px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.wrap_sudoku{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.sudoku{
+}
+.row-sudoku{
+    display:flex;
+}
+.column-sudoku{
+    padding: 1rem;
+    border:2px solid red;
+}
+.mini-row{
+    display:flex;
+}
+.mini-column{
+    width:2rem;
+    height:2rem;
+    background-color: #fff;
+    border:1px solid black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.warnig{
+    color:red;
+    font-size:2rem;
+}
+.mini-column:hover{
+    cursor:pointer;
+    background-color: lightcyan;
+
+}
+.mini-column:active{
+    box-shadow: inset 2px 2px black;
+}
