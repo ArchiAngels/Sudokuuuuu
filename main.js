@@ -1,4 +1,5 @@
 let sudoku = document.getElementsByClassName('sudoku');
+let help_nums = document.getElementsByClassName('help_num');
 
 let rows = 3;
 let columns = 3;
@@ -12,8 +13,16 @@ let act_box = {
 }
 let problems = {
     box:{},
-    row:{}
+    row:{},
+    col:{}
 };
+let firs_block = [];
+let global_matrix_all = [];
+let first_refresh = true;
+
+let help_ctrl_on = false;
+let kkkkk = 0;
+
 add_sum_counters = () =>{
     for(let i =0; i < sudoku[0].children.length;i++){
         for(let j = 0; j < sudoku[0].children[i].children.length;j++){
@@ -31,18 +40,27 @@ add_sum_counters = () =>{
     }
 }
 
-sudoku[0].addEventListener('click',(event)=>{
-
+window.addEventListener('click',(event)=>{
+    console.log(event.target);
     if(event.target.className.includes('mini-column')){
-        act_box.write_in_mini_column = true;
-        act_box.elem = event.target;
-        act_box.x = event.target.dataset.father;
-        act_box.y = event.target.dataset.child;
+        if(help_ctrl_on){
+            // console.log(event.target.dataset);
+            help_to_find_solution_sudoku({row:event.target.dataset.row,column:event.target.dataset.column,num:kkkkk});
+        }
+        else{
+            act_box.write_in_mini_column = true;
+            act_box.elem = event.target;
+            act_box.x = event.target.dataset.father;
+            act_box.y = event.target.dataset.child;
+        }
     }
     else{
         act_box.write_in_mini_column = false;
         act_box.elem = 0;
         act_box.num = 0;
+    }
+    if(event.target.parentElement.className.includes('help_num')){
+        kkkkk = event.target.innerHTML;
     }
 })
 
@@ -55,6 +73,13 @@ window.addEventListener('keyup',(e)=>{
 
         update_horizon_watcher(act_box.elem.dataset);
         update_vertical_watcher(act_box.elem.dataset);
+    }
+    help_ctrl_on = false;
+});
+window.addEventListener('keydown',(e)=>{
+    console.log(e);
+    if(e.key == 'Control'){
+        help_ctrl_on = true;
     }
 })
 
@@ -118,11 +143,11 @@ sum_of = (row,column) =>{
     for(let i = 0; i < rows; i++){
         for(let j = 0 ; j < columns;j++){
             let momentik = elem.children[i].children[j].innerHTML;
-            console.log(momentik,Number(momentik));
+            // console.log(momentik,Number(momentik));
             sum += Number(momentik);
         }
     }
-    console.log(elem,sum);
+    // console.log(elem,sum);
 }
 verification_in_box = (options) =>{
     // console.log(options);
@@ -177,6 +202,7 @@ verification_in_row = () =>{
                     for(let ri1 = 1; ri1 < rows;ri1++){
                         for(let rj1 = 0; rj1 < columns;rj1++){
                             let momentik_two = sudoku[0].children[ri0].children[ri1].children[ri].children[rj1];
+                            // console.log(momentik_two);
                             momentik_two.style.color = 'black';
                             // console.log('1::',ri0,rj0,ri,rj,momentik.innerHTML,ri0,ri1,ri,rj1,momentik_two.innerHTML,momentik.innerHTML == momentik_two.innerHTML);
                             if(momentik.innerHTML == momentik_two.innerHTML && momentik_two != '' && momentik.innerHTML != ''){
@@ -203,18 +229,64 @@ verification_in_row = () =>{
     }
     // console.log(problems.row);
 }
+Verification_in_column = () =>{
+    let warning3 = 0;
+    problems.col = {};
+    for(let l0 = 0; l0 < columns; l0++){
+        for(let r0 = 0; r0 < rows; r0++){
+            for(let l1 = 0; l1 < columns; l1++){
+                for(let r1 = 0; r1 < rows; r1++){
+                    let curre_check_num = sudoku[0].children[r0].children[l0].children[r1].children[l1];
+                    // console.log(curre_check_num);
+                    for(let r2 = 1; r2 < rows; r2++){
+                        for(let l2 = 0; l2 < columns; l2++){
+                            let curre_check_item = sudoku[0].children[r2].children[l0].children[l2].children[l1];
+                            // console.log(r2,curre_check_item);
+                            if(curre_check_num.innerHTML != '' && curre_check_num.innerHTML == curre_check_item.innerHTML){
+                                if(r0 != r2){
+                                    problems.col[`col_warn${warning3}`] = {
+                                        num1:curre_check_item.innerHTML,
+                                        num2:curre_check_num.innerHTML,
+                                        coors:`${r0}${l0}${r1}${l1}_${r2}${l0}${l2}${l1}`,
+                                        elems:{
+                                            el1:curre_check_item,
+                                            el2:curre_check_num
+                                        }
+                                    }
+                                    warning3++;
+                                    // console.log('PROBLEM',warning3,curre_check_item,curre_check_num);
+                                    // console.log(curre_check_item);
+                                    // console.log(curre_check_item,curre_check_num);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 problems_always_red = (obj) =>{
     for(let i in obj){
         for(let k in obj[i]){
             for(let z in obj[i][k].elems){
                 // console.log('RED:',obj[i][k].elems[z]
-                obj[i][k].elems[z].style.color = 'red';
+                // console.log(i);
+                if(i == 'box'){
+                    obj[i][k].elems[z].style.color = '#f9b107';
+                }
+                if(i == 'col'){
+                    obj[i][k].elems[z].style.color = 'blue';
+                }
+                if(i == 'row'){
+                    obj[i][k].elems[z].style.color = 'red';
+                }
             }
         }
     }
 }
-let firs_block = []
 start_game = () =>{
+    first_refresh = true;
     firs_block = [];
     // for(let r0 = 0 ; r0 < rows;r0++){
         // for(let l0 = 0 ; l0 < columns;l0++){
@@ -240,7 +312,8 @@ start_game = () =>{
             }
         // }
     // }
-    fill_all_sudoku();
+    fill_all_column();
+    fill_all_row();
     refresh_act_info_sudoku();
 }
 change_arr = (arr,item) =>{
@@ -252,23 +325,120 @@ change_arr = (arr,item) =>{
     }
     return new_arr;
 }
-fill_all_sudoku = () =>{
-    for(r0 = 0; r0 < 1;r0++){
-        for(l0 = 1; l0 < columns;l0++){
-            for(r1 = 0; r1 < rows;r1++){
-                for(l1 = 0; l1 < columns; l1++){
+fill_all_row = () =>{
+    for(let r0 = 0; r0 < rows;r0++){
+        for(let l0 = 1; l0 < columns;l0++){ 
+            for(let r1 = 0; r1 < rows;r1++){
+                for(let l1 = 0; l1 < columns; l1++){
                     let curr_moment_quadr = sudoku[0].children[r0].children[l0].children[r1].children[l1];
-                    
-                        let roow = r1+l0 > firs_block.length-1?Math.abs(firs_block.length-(r1+l0)):r1+l0;
-                        // console.log(roow);
-                        let coll = r1+l1 > firs_block.length-1?Math.abs(firs_block.length-(r1+l1)):r1+l1;
+                    let row_num = r1+l0;
+                    let column_num = r1+l1+r0;
+                    // console.log('1::',row_num,firs_block.length,row_num%firs_block.length);
+                        let roow = row_num > firs_block.length-1?(row_num%firs_block.length):row_num;
+                        // console.log('2::',row_num,firs_block.length,row_num%firs_block.length);
+                        // console.log(l0,roow,row_num%firs_block.length);
+                        let coll = column_num > firs_block.length-1?(column_num%firs_block.length):column_num;
+                        // console.log(r1,l1,column_num,coll);
                         curr_moment_quadr.innerHTML = firs_block[roow][coll];
+                        // console.log(firs_block,firs_block[roow][coll]);
                 }
             }
         }
     }
 }
+fill_all_column = () =>{
+    for(let l0 = 0; l0 < 1; l0++){
+        for(let r0 = 1; r0 < rows; r0++){
+            for(let r1 = 0; r1 < rows; r1++){
+                for(let l1 = 0; l1 < columns; l1++){
+                    let curr_mini_item = sudoku[0].children[r0].children[l0].children[r1].children[l1];
+
+                    let row_num = r1;
+                    let column_num = l1+r0;
+
+                    let roow = row_num > firs_block.length-1?(row_num%firs_block.length):row_num;
+                    let coll = column_num > firs_block.length-1?(column_num%firs_block.length):column_num;
+
+                    curr_mini_item.innerHTML = firs_block[roow][coll];
+                    // curr_mini_item.innerHTML = firs_block[row_num][coll];
+                }
+            }
+        }
+    }
+}
+
 refresh_act_info_sudoku = () =>{
     verification_in_row();
+    Verification_in_column();
     problems_always_red(problems);
+    updt_sum_oveflow();
+    if(first_refresh){
+
+        first_refresh = false;
+        global_matrix_all = [];
+        let mini_matrix_1_3 = [];
+        let mini_matrix_1_9 = [];
+        let mini_matrix_1_27 = [];
+        
+        for(let r0 = 0; r0 < rows; r0++){
+            mini_matrix_1_3 = [];
+            for(let l0 = 0; l0 < rows; l0++){
+                mini_matrix_1_9 = [];
+                for(let r1 = 0; r1 < rows; r1++){
+                    mini_matrix_1_27 = [];
+                    for(let l1 = 0; l1 < rows; l1++){
+                        mini_matrix_1_27.push(sudoku[0].children[r0].children[l0].children[r1].children[l1].innerHTML);
+                    }
+                    mini_matrix_1_9.push(mini_matrix_1_27);
+                    
+                }
+                mini_matrix_1_3.push(mini_matrix_1_9);
+                // console.log(mini_matrix_1_3);
+            }
+            global_matrix_all.push(mini_matrix_1_3);
+            
+            
+        }
+        
+        // console.log(global_matrix_all);
+    }
+}
+
+start_sudoku_game = (how_much_save = 60) =>{
+    for(let r0 = 0; r0 < rows; r0++){
+        for(let l0 = 0; l0 < rows; l0++){
+            for(let r1 = 0; r1 < rows; r1++){
+                for(let l1 = 0; l1 < rows; l1++){
+                    let curr_item = sudoku[0].children[r0].children[l0].children[r1].children[l1];
+                    curr_item.innerHTML = Math.random() >= (how_much_save/100)?'':curr_item.innerHTML;
+                }
+            }
+        } 
+    }
+    updt_sum_oveflow();
+}
+updt_sum_oveflow = ()=>{
+    for(let i = 0; i < rows; i++){
+        for(let b = 0; b < columns; b++){
+            update_horizon_watcher({row:i,father:b});
+            update_vertical_watcher({column:i,child:b});
+        }
+    }
+}
+help_to_find_solution_sudoku = (options) =>{
+    // console.log(options);
+    // let solution = {};
+    for(let i = 0 ; i < rows; i++){
+        for(let j = 0; j < columns; j++){
+            if(global_matrix_all[options.row][options.column][i][j] == options.num){
+                sudoku[0].children[options.row].children[options.column].children[i].children[j].innerHTML = options.num;
+                break;
+            }
+            // solution.row = global_matrix_all[options.row][options.column][i];
+            // solution.col = solution.row.indexOf(options.num+'');
+        }
+    }
+    refresh_act_info_sudoku();
+    // console.log(solution);
+    // sudoku[0].children[options.row].children[options.column].children[Number(solution.row)].children[Number(solution.col)].innerHTML = options.num;
 }
