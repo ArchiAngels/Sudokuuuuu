@@ -9,7 +9,7 @@ let act_box = {
     elem:0,
     x:0,
     y:0,
-    num:0
+    num:0,
 }
 let problems = {
     box:{},
@@ -22,6 +22,7 @@ let first_refresh = true;
 
 let help_ctrl_on = false;
 let kkkkk = 0;
+let availible_other_box = true;
 
 add_sum_counters = () =>{
     for(let i =0; i < sudoku[0].children.length;i++){
@@ -40,44 +41,96 @@ add_sum_counters = () =>{
     }
 }
 
-window.addEventListener('click',(event)=>{
-    console.log(event.target);
+sudoku[0].addEventListener('click',(event)=>{
+    // console.log(event.target);
     if(event.target.className.includes('mini-column')){
-        if(help_ctrl_on){
-            // console.log(event.target.dataset);
-            help_to_find_solution_sudoku({row:event.target.dataset.row,column:event.target.dataset.column,num:kkkkk});
+        if(availible_other_box == false){
+
         }
         else{
-            act_box.write_in_mini_column = true;
-            act_box.elem = event.target;
-            act_box.x = event.target.dataset.father;
-            act_box.y = event.target.dataset.child;
+            if(help_ctrl_on){
+                // console.log(event.target.dataset);
+                help_to_find_solution_sudoku({row:event.target.dataset.row,column:event.target.dataset.column,num:kkkkk});
+            }
+            else{
+                act_box.write_in_mini_column = true;
+                
+                act_box.elem = event.target;
+                act_box.elem.style.color = act_box.color;
+                act_box.x = event.target.dataset.father;
+                act_box.y = event.target.dataset.child;
+            }
         }
+        
     }
     else{
         act_box.write_in_mini_column = false;
+        act_box.elem.style.color = act_box.color;
         act_box.elem = 0;
         act_box.num = 0;
     }
+    
+})
+window.addEventListener('click',(event)=>{
     if(event.target.parentElement.className.includes('help_num')){
         kkkkk = event.target.innerHTML;
     }
 })
-
 window.addEventListener('keyup',(e)=>{ 
-    if(act_box.write_in_mini_column){
-        act_box.elem.innerHTML = Number(e.key)/2?Number(e.key):'';
-        act_box.num = Number(e.key)/2?Number(e.key):'';
-        verification_in_box(act_box);
-        refresh_act_info_sudoku();
-
-        update_horizon_watcher(act_box.elem.dataset);
-        update_vertical_watcher(act_box.elem.dataset);
+    // console.log(e.key);
+    if(help_ctrl_on){
+        // unblock_actv_box();
+        act_box.write_in_mini_column = false;
+        act_box.elem = 0;
+        availible_other_box = false;
+        // console.log('help');
+        first_go = (num) =>{
+            // console.log('go');
+            for(let r0 = 0; r0 < rows; r0++){
+                    for(let l0 = 0; l0 < rows; l0++){
+                        for(let r1 = 0; r1 < rows; r1++){
+                            for(let l1 = 0; l1 < rows; l1++){  
+                                let curr_box_elem = sudoku[0].children[r0].children[l0].children[r1].children[l1];
+                                // console.log('aue',curr_box_elem);
+                                if(global_matrix_all[r0][l0][r1][l1] == num+''){
+                                    if(curr_box_elem.innerHTML != num+''){
+                                        curr_box_elem.innerHTML = num;
+                                        // console.log(curr_box_elem,num);
+                                        curr_box_elem.classList.add('anim_helper_fade');
+                                        refresh_act_info_sudoku();
+                                        l0 = rows -1;
+                                        l1 = rows -1;
+                                        r1 = rows -1;
+                                        r0 = rows -1;
+                                        break;
+                                    }
+                                    
+                                }
+                            }
+                        }
+                    }
+            }
+        }
+        Number(e.key)/2?first_go(Number(e.key)):0;
     }
-    help_ctrl_on = false;
+    else{
+        // console.log('else');
+        if(act_box.write_in_mini_column){
+            act_box.elem.innerHTML = Number(e.key)/2?Number(e.key):'';
+            act_box.num = Number(e.key)/2?Number(e.key):'';
+            // verification_in_box(act_box);
+            // verification_in_boxes()
+            refresh_act_info_sudoku();
+        }
+        
+    }
+    if(e.key == 'Control'){
+        help_ctrl_on = false;
+        availible_other_box = true;
+    }
 });
 window.addEventListener('keydown',(e)=>{
-    console.log(e);
+    // console.log(e);
     if(e.key == 'Control'){
         help_ctrl_on = true;
     }
@@ -104,10 +157,10 @@ init = (options) =>{
 
     sudoku[0].innerHTML += html;
     add_sum_counters();
-
+    start_game();
+    start_sudoku_game(40);
 }
 
-init({rows:rows,columns:columns});
 
 update_horizon_watcher = (options) =>{
     // console.log(options);
@@ -149,44 +202,48 @@ sum_of = (row,column) =>{
     }
     // console.log(elem,sum);
 }
-verification_in_box = (options) =>{
+verification_in_boxes = () =>{
     // console.log(options);
-    let warning = 0;
-    for(let p in problems.box){
-        if(p == `box${options.elem.dataset.row}${options.elem.dataset.column}_warn`){
+    // let warning = 0;
+    // for(let p in problems.box){
+        // if(p == `box${options.elem.dataset.row}${options.elem.dataset.column}_warn`){
             // console.log(p,"DELETE");
-            problems.box[p] = {};
-        }
-    }
-    for(let bi = 0 ; bi < rows;bi++){
-        for(let bj = 0; bj < columns;bj++){
-            let momentik = sudoku[0].children[options.elem.dataset.row].children[options.elem.dataset.column].children[bi].children[bj];
-            for(let bk = 0; bk < rows;bk++){
-                for(let bk2 = 0; bk2 < columns;bk2++){
-                    let momentik_two = sudoku[0].children[options.elem.dataset.row].children[options.elem.dataset.column].children[bk].children[bk2];
-                        momentik.style.color = 'black';
-                        momentik_two.style.color = 'black';
-                    if(momentik.innerHTML == momentik_two.innerHTML && momentik_two.innerHTML != '' && momentik.innerHTML != ''){
-                        // console.log('1::',bi,bj,bk,bk2,momentik.innerHTML,momentik_two.innerHTML,momentik.innerHTML == momentik_two.innerHTML);
-                        if(bi != bk || bj != bk2){
-                            // console.log('2::',bi,bj,bk,bk2,momentik.innerHTML,momentik_two.innerHTML,momentik.innerHTML == momentik_two.innerHTML);
-                            problems.box[`box${options.elem.dataset.row}${options.elem.dataset.column}_warn`] = {
-                                num1:momentik.innerHTML,
-                                num2:momentik_two.innerHTML,
-                                coors:`${bi}${bj}${bk}${bk2}`,
-                                elems:{
-                                    el1:momentik,
-                                    el2:momentik_two
+            problems.box = {};
+        // }
+    // }
+    for(let r0 = 0;r0 < rows; r0++){
+        for(let l0 = 0; l0 < columns; l0++){
+            for(let bi = 0 ; bi < rows;bi++){
+                for(let bj = 0; bj < columns;bj++){
+                    let momentik = sudoku[0].children[r0].children[l0].children[bi].children[bj];
+                    for(let bk = 0; bk < rows;bk++){
+                        for(let bk2 = 0; bk2 < columns;bk2++){
+                            let momentik_two = sudoku[0].children[r0].children[l0].children[bk].children[bk2];
+                                momentik.style.color = 'black';
+                                momentik_two.style.color = 'black';
+                            if(momentik.innerHTML == momentik_two.innerHTML && momentik_two.innerHTML != '' && momentik.innerHTML != ''){
+                                // console.log('1::',bi,bj,bk,bk2,momentik.innerHTML,momentik_two.innerHTML,momentik.innerHTML == momentik_two.innerHTML);
+                                if(bi != bk || bj != bk2){
+                                    // console.log('2::',bi,bj,bk,bk2,momentik.innerHTML,momentik_two.innerHTML,momentik.innerHTML == momentik_two.innerHTML);
+                                    problems.box[`box${r0}${l0}_warn`] = {
+                                        num1:momentik.innerHTML,
+                                        num2:momentik_two.innerHTML,
+                                        coors:`${bi}${bj}${bk}${bk2}`,
+                                        elems:{
+                                            el1:momentik,
+                                            el2:momentik_two
+                                        }
+                                    } 
+                                    warning++;
+                                    break;
                                 }
-                            } 
-                            warning++;
-                            break;
+                            }
                         }
                     }
                 }
+                // console.log(problems);
             }
         }
-        // console.log(problems);
     }
 }
 verification_in_row = () =>{
@@ -266,12 +323,28 @@ Verification_in_column = () =>{
         }
     }
 }
+block_actv_box = () =>{
+    // console.log('BLOCK NOW');
+    availible_other_box = false;
+}
+unblock_actv_box = () =>{
+    act_box.elem?act_box.elem.style.backgroundColor = 'white':0;
+    // act_box.elem.style.color = act_box.color;
+    // console.log('UNBLOCKED NOW');
+    availible_other_box = true;
+}
 problems_always_red = (obj) =>{
+    unblock_actv_box();
     for(let i in obj){
+        
+        
         for(let k in obj[i]){
+            
             for(let z in obj[i][k].elems){
+                
                 // console.log('RED:',obj[i][k].elems[z]
                 // console.log(i);
+                block_actv_box();
                 if(i == 'box'){
                     obj[i][k].elems[z].style.color = '#f9b107';
                 }
@@ -368,10 +441,19 @@ fill_all_column = () =>{
 }
 
 refresh_act_info_sudoku = () =>{
-    verification_in_row();
-    Verification_in_column();
-    problems_always_red(problems);
-    updt_sum_oveflow();
+    // if(act_box.write_in_mini_column){
+        // for(let r0 = 0 ; r0 < rows; r0++){
+        //     for(let l0 =0; l0 < column; l0++){
+        //         // verification_in_box({elem.dataset.row:r0,})
+        //     }
+        // }
+        verification_in_boxes()
+        verification_in_row();
+        Verification_in_column();
+        problems_always_red(problems);
+        updt_sum_oveflow();
+    // }
+    
     if(first_refresh){
 
         first_refresh = false;
@@ -402,20 +484,26 @@ refresh_act_info_sudoku = () =>{
         
         // console.log(global_matrix_all);
     }
+    else{
+        win();
+    }
 }
 
 start_sudoku_game = (how_much_save = 60) =>{
+    hide_box = (item) =>{
+        item.style.backgroundColor = '#b0b091';
+        return '';
+    }
     for(let r0 = 0; r0 < rows; r0++){
         for(let l0 = 0; l0 < rows; l0++){
             for(let r1 = 0; r1 < rows; r1++){
                 for(let l1 = 0; l1 < rows; l1++){
                     let curr_item = sudoku[0].children[r0].children[l0].children[r1].children[l1];
-                    curr_item.innerHTML = Math.random() >= (how_much_save/100)?'':curr_item.innerHTML;
+                    curr_item.innerHTML = Math.random() >= (how_much_save/100)?hide_box(curr_item):curr_item.innerHTML;
                 }
             }
         } 
     }
-    updt_sum_oveflow();
 }
 updt_sum_oveflow = ()=>{
     for(let i = 0; i < rows; i++){
@@ -442,3 +530,35 @@ help_to_find_solution_sudoku = (options) =>{
     // console.log(solution);
     // sudoku[0].children[options.row].children[options.column].children[Number(solution.row)].children[Number(solution.col)].innerHTML = options.num;
 }
+win = () =>{
+    let need_to_win = 0;
+    for( let r0 = 0; r0 < rows; r0++){
+        for(let l0 = 0; l0 < columns; l0++){
+            for(let r1 = 0; r1 < rows; r1++){
+                for(let l1 = 0; l1 < columns; l1++){
+                    let curr_item_box = sudoku[0].children[r0].children[l0].children[r1].children[l1];
+                    if(curr_item_box.innerHTML == ''){
+                        r0 = rows - 1;
+                        l0 = columns - 1;
+                        r1 = rows - 1;
+                        l1 = columns - 1;
+                        // console.log(curr_item_box,'it\'s empty need to fix!!');
+                        break;
+                    }
+                    else{
+                        // console.log('It\'s okay');
+                        if(availible_other_box){
+                            need_to_win++;
+                            // console.log('Very cool!',need_to_win);
+                        }
+                        
+                    }
+                }
+            }
+        }
+    }
+    if(need_to_win == ((rows*columns)**2)){
+        console.log('WOW YOU WIN');
+    }
+}
+init({rows:rows,columns:columns});
